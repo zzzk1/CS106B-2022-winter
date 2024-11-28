@@ -7,10 +7,22 @@
 using namespace std;
 
 void dropSandOn(Grid<int>& world, int row, int col) {
-    /* TODO: Delete this line and the three after it, then implement this function. */
-    (void) world;
-    (void) row;
-    (void) col;
+    if (!world.inBounds(row, col)) {
+        return;
+    }
+
+    int height = ++world[row][col];
+    if (height < 4) {
+        return;
+    }
+
+    world[row][col] = 0;
+    dropSandOn(world, row, col - 1);
+    dropSandOn(world, row, col + 1);
+    dropSandOn(world, row - 1, col);
+    dropSandOn(world, row + 1, col);
+
+    return;
 }
 
 
@@ -85,7 +97,22 @@ PROVIDED_TEST("Two topples chain.") {
  *
  * Happy testing!
  */
+STUDENT_TEST("") {
+    /* Create a simple source grid. */
+    Grid<int> before = {
+        { 3, 3, 3 },
+        { 3, 3, 3 },
+        { 3, 3, 3 }
+    };
+    Grid<int> after = {
+        { 1, 3, 1 },
+        { 3, 0, 3 },
+        { 1, 3, 1 }
+    };
 
+    dropSandOn(before, 1, 1);
+    EXPECT_EQUAL(before, after);
+}
 
 
 
