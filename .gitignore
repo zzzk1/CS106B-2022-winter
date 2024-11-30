@@ -1,5 +1,7 @@
 .DS_Store
-
+**/Fun_with_Collections.app/
+**/Downloads/
+**/*.app/*
 /CS106/CS106.pro.user
 /CS106/build
 /CS106_2021.1
