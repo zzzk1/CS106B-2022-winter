@@ -6,11 +6,53 @@ using namespace std;
 Grid<bool> floodedRegionsIn(const Grid<double>& terrain,
                             const Vector<GridLocation>& sources,
                             double height) {
-    /* TODO: Delete this line and the next four lines, then implement this function. */
-    (void) terrain;
-    (void) sources;
-    (void) height;
-    return {};
+
+    Grid<bool> result(terrain.numRows(), terrain.numCols());
+
+    Queue<GridLocation> que;
+    for (GridLocation g : sources) {
+        if (terrain.get(g) <= height) {
+            que.enqueue(g);
+            result.set(g, true);
+        }
+    }
+
+    while (!que.isEmpty()) {
+        GridLocation location = que.dequeue();
+        if (height < terrain.get(location)) {
+            continue;
+        }
+
+        if (location.row - 1 >= 0 && !result.get(GridLocation{ location.row - 1, location.col })) {
+            que.enqueue(GridLocation{ location.row - 1, location.col });
+            if (terrain.get(GridLocation{ location.row - 1, location.col }) <= height) {
+                result.set(GridLocation{ location.row - 1, location.col }, true);
+            }
+        }
+
+        if (location.row + 1 < terrain.numRows() && !result.get(GridLocation{ location.row + 1, location.col })) {
+            que.enqueue(GridLocation{ location.row + 1, location.col });
+            if (terrain.get(GridLocation{ location.row + 1, location.col }) <= height) {
+                result.set(GridLocation{ location.row + 1, location.col }, true);
+            }
+        }
+
+        if (location.col - 1 >= 0 && !result.get(GridLocation{ location.row, location.col - 1 })) {
+            que.enqueue(GridLocation{ location.row, location.col - 1 });
+            if (terrain.get(GridLocation{ location.row, location.col - 1 }) <= height) {
+                result.set(GridLocation{ location.row, location.col - 1 }, true);
+            }
+        }
+
+        if (location.col + 1 < terrain.numCols() && !result.get(GridLocation{ location.row, location.col + 1 })) {
+            que.enqueue(GridLocation{ location.row, location.col + 1 });
+            if (terrain.get(GridLocation{ location.row, location.col + 1 }) <= height) {
+                result.set(GridLocation{ location.row, location.col + 1 }, true);
+            }
+        }
+    }
+
+    return result;
 }
 
 
