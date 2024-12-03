@@ -1,37 +1,88 @@
 #include "WhatAreYouDoing.h"
+#include "cctype"
+#include "strlib.h"
+
 using namespace std;
 
-/* TODO: Read the comments in WhatAreYouDoing.h to see what this function needs to do, then
- * delete this comment.
- *
- * Don't forget about the tokenize function defined in WhatAreYouDoing.h; you'll almost
- * certainly want to use it.
- */
+void backtracking(vector<string>& words, vector<string>& collector, vector<vector<string>>& result, int index);
+bool isWord(const string& str);
+Set<string> collectToResult(vector<vector<string>>& allConditionCase, vector<string>& separators);
 Set<string> allEmphasesOf(const string& sentence) {
-    /* TODO: Delete this line and the next one, then implement this function. */
-    (void) sentence;
-    return {};
+    Vector<string> sentences = tokenize(sentence);
+
+    vector<string> words;
+    vector<string> separators;
+    for (string sentence : sentences) {
+        if (isWord(sentence)) {
+            separators.push_back("");
+            words.push_back(toLowerCase(sentence));
+        } else {
+            separators.push_back(sentence);
+        }
+    }
+
+    vector<vector<string>> allConditionCase;
+    vector<string> collection;
+    backtracking(words, collection, allConditionCase, 0);
+
+    Set<string> result = collectToResult(allConditionCase, separators);
+    return result;
 }
 
+Set<string> collectToResult(vector<vector<string>>& allConditionCase, vector<string>& separators) {
+    Set<string> answer;
+    for (vector<string> iter : allConditionCase) {
+        vector<string> vec = vector<string>(separators.begin(), separators.end());
+
+        int i = 0;
+        for (string& s : vec) {
+            if (s == "") {
+                s = iter[i++];
+            }
+        }
+
+        string result;
+        for (string& s : vec) {
+            result += s;
+        }
+
+        answer.add(result);
+    }
+
+    return answer;
+}
+
+bool isWord(const string& str) {
+    for (char ch : str) {
+        if (!isalpha(ch)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+
+void backtracking(vector<string>& words, vector<string>& collector, vector<vector<string>>& result, int index) {
+    if (index >= words.size()) {
+        result.push_back(collector);
+        return;
+    }
+
+    //Left branch add upper case
+    string upperCase = toUpperCase(words[index]);
+    collector.push_back(upperCase);
+    backtracking(words, collector, result, index + 1);
+    collector.pop_back();
+
+
+    //Right branch add lower case
+    string lowerCase = toLowerCase(words[index]);
+    collector.push_back(lowerCase);
+    backtracking(words, collector, result, index + 1);
+    collector.pop_back();
+}
 /* * * * * * Test Cases * * * * * */
 #include "GUI/SimpleTest.h"
-
-/* TODO: Add your own tests here. You know the drill - look for edge cases, think about
- * very small and very large cases, etc.
- */
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /* * * * * * Test cases from the starter files below this point. * * * * * */
 
@@ -60,6 +111,29 @@ PROVIDED_TEST("Enumerates all options in a more typical case.") {
     };
 
     EXPECT_EQUAL(allEmphasesOf("You Are?"), expected);
+}
+
+STUDENT_TEST("Enumerates all options for 'what ARE you doing?'") {
+    Set<string> expected = {
+        "what are you doing?",
+        "what are YOU doing?",
+        "what ARE you doing?",
+        "what ARE YOU doing?",
+        "WHAT are you doing?",
+        "WHAT are YOU doing?",
+        "WHAT ARE you doing?",
+        "WHAT ARE YOU doing?",
+        "what are you DOING?",
+        "what are YOU DOING?",
+        "what ARE you DOING?",
+        "what ARE YOU DOING?",
+        "WHAT are you DOING?",
+        "WHAT are YOU DOING?",
+        "WHAT ARE you DOING?",
+        "WHAT ARE YOU DOING?"
+    };
+
+    EXPECT_EQUAL(allEmphasesOf("what ARE you doing?"), expected);
 }
 
 PROVIDED_TEST("Stress Test: Recursion only branches on words (should take under a second)") {
