@@ -1,17 +1,105 @@
 #include "ShiftScheduling.h"
 using namespace std;
 
-/* TODO: Refer to ShiftScheduling.h for more information about what this function should do.
- * Then, delete this comment and replace it with one of your own.
- */
+bool isOnlyShift(vector<Shift>& shifts);
+Shift findMaxValueOne(vector<Shift>& group);
+Set<Shift> findMaxValueGroup(vector<vector<Shift>>& allpossible);
+void backTracking(vector<Shift>& shifts, vector<Shift>& collector, vector<vector<Shift>>& result, int index, int limit);
+
 Set<Shift> highestValueScheduleFor(const Set<Shift>& shifts, int maxHours) {
-    /* TODO: Delete the next few lines and implement this function. */
-    (void) shifts;
-    (void) maxHours;
-    return {};
+    if (maxHours < 0) {
+        error("");
+    }
+
+    vector<Shift> shiftsToVec(shifts.begin(), shifts.end());
+
+    if (isOnlyShift(shiftsToVec)) {
+        Shift onlyOne = findMaxValueOne(shiftsToVec);
+        shiftsToVec.clear();
+        shiftsToVec.push_back(onlyOne);
+    }
+
+    vector<Shift> collector;
+    vector<vector<Shift>> allpossible;
+    backTracking(shiftsToVec, collector, allpossible, 0, maxHours);
+
+    return findMaxValueGroup(allpossible);
 }
 
+Shift findMaxValueOne(vector<Shift>& group) {
+    int maxValue = 0;
+    Shift result;
+    for (auto& shift : group) {
+        if (shift.value >= maxValue) {
+            result = shift;
+            maxValue = result.value;
+        }
+    }
+    return result;
+}
 
+bool isOnlyShift(vector<Shift>& shifts) {
+    for (int i = 1; i < shifts.size(); i++) {
+        if (shifts[i-1].day != shifts[i].day || shifts[i-1].startHour != shifts[i].startHour || shifts[i-1].endHour != shifts[i].endHour) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+Set<Shift> findMaxValueGroup(vector<vector<Shift>>& allpossible) {
+    int maxValue = 0;
+    vector<Shift> result;
+
+    for (const auto &vec : allpossible) {
+        int amount = 0;
+        for (const auto &iter : vec) {
+            amount += iter.value;
+        }
+
+        if (amount > maxValue) {
+            result = vec;
+        }
+        maxValue = max(maxValue, amount);
+    }
+
+    Set<Shift> answer;
+    for (const auto& value : result) {
+        answer.add(value);
+    }
+
+    return answer;
+}
+
+bool isOverLapping(vector<Shift>& shifts, Shift& shift) {
+    for (const auto& iter : shifts) {
+        if (overlapsWith(shift, iter)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void backTracking(vector<Shift>& shifts, vector<Shift>& collector, vector<vector<Shift>>& result, int index, int limit) {
+    if (index >= shifts.size() || limit < 0) {
+        if (limit >= 0) {
+            result.push_back(collector);
+        }
+        return;
+    }
+
+    for (int i = index; i < shifts.size();  i++) {
+        Shift shift = shifts[i];
+        if (isOverLapping(collector, shift)) {
+            backTracking(shifts, collector, result, i + 1, limit);
+        } else {
+            collector.push_back(shift);
+            backTracking(shifts, collector, result, i + 1, limit - lengthOf(shift));
+            collector.pop_back();
+        }
+    }
+}
 
 /* * * * * * Test Cases * * * * * */
 #include "GUI/SimpleTest.h"
@@ -205,6 +293,7 @@ PROVIDED_TEST("Stress test: Don't generate shift combinations with overlapping s
     for (int i = 0; i < 100; i++) {
         trickySet += Shift{ Day::MONDAY, 1, 2, i };
     }
+
     EXPECT_EQUAL(trickySet.size(), 100);
 
     auto result = highestValueScheduleFor(trickySet, 1);
